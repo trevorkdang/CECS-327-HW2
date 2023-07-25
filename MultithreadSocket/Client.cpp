@@ -93,16 +93,22 @@ int main (int argc, char* argv[])
         write(listenFd, s, strlen(s));
 
         if (strcmp(s, "dir") == 0) {
-            string rec;
-            do {
+            //string rec;
+            while (true) {
                 char res[300];
                 bzero(res, 300);
                 read(listenFd, res, 300);
-                rec = res;
-                if (res != "End_of_Dir") {
-                    cout << rec << endl;
+                //rec = res;
+                //if (res != "End_of_Dir") {
+                if (strcmp(res, "End_of_Dir") == 0) {
+                    break;
                 }
-            } while (rec != "End_of_Dir");
+                else {
+                    cout << res << endl;
+                }
+            } 
+            //while (rec != "End_of_Dir");
+            continue;
         }
         else {
             //stores and waits for server response
@@ -117,12 +123,13 @@ int main (int argc, char* argv[])
                 break;
             }
             //checks if the file doesnt exist
-            else if (strcmp(res, "The file doesn't exist!") == 0) {
+            else if (strcmp(res, "The file doesn't exist! Transferring file to server...") == 0) {
                 cout << res << endl;
                 //the file will be transferred to the server and then opened and read if it doesn't exist
                 ifstream file(s);
                 string line;
                 while (getline(file, line)) {
+                    line += "\n";
                     write(listenFd, line.c_str(), line.size());
                 }
                 file.close();

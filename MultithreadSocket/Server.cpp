@@ -128,39 +128,43 @@ void *task1 (void *dummyPt)
             dir = opendir(".");
 
             if (dir == NULL) {
+
             }
 
-            string all_files;
 
             while ((dp = readdir(dir)) != NULL) {
-                all_files += dp -> d_name;
+                string all_files(dp -> d_name);
                 all_files += "\n";
+                write(connFd, all_files.c_str(), all_files.size());
             }
 
             closedir(dir);
-            all_files += "End_of_Dir\n";
-            write(connFd, all_files.c_str(),all_files.size());
-        }
-
-        //checks if the file requested by the client exists
-        ifstream file(tester);
-        if (file.good()) {
-            //if file exists, send message to client
-            char res[] = "The file already exists!";
-            write(connFd, res, strlen(res));
+            string end_of_dir = "End_of_Dir\n";
+            write(connFd, end_of_dir.c_str(), end_of_dir.size());
         }
         else {
-            //if file doesn't exist, send message to client
-            char res[] = "The file doesn't exist!";
-            write (connFd, res, strlen(res));
-
-            //creates file name with name from client
-            ofstream outfile(tester);
-            while (read(connFd, test, 300) > 0) {
-                outfile << test;
-                bzero(test, 300);
+            //checks if the file requested by the client exists
+            ifstream file(tester);
+            if (file.good()) {
+                //if file exists, send message to client
+                char res[] = "The file already exists!";
+                write(connFd, res, strlen(res));
             }
-            outfile.close();
+            else {
+                /*//if file doesn't exist, send message to client
+                char res[] = "The file doesn't exist! Transferring file to server...";
+                write (connFd, res, strlen(res));
+
+                //creates file name with name from client
+                //ofstream outfile(tester);
+                while (read(connFd, test, 300) > 0) {
+                    outfile << test;
+                    bzero(test, 300);
+                }
+                //outfile.close();*/
+                char res[] = "The file doesn't exist! Transferring file to server...";
+                write(connFd, res, strlen(res)); 
+            }
         }
 
     }
