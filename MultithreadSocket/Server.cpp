@@ -1,3 +1,9 @@
+//Trevor Dang Student ID: 029014893
+/* This server program looks for a connection to a client with provided port number 
+in order to fulfil a request of a specific file from the client, send the files 
+of the current working directory to the client, or exit the connection between the 
+client and server by responding to the 'exit' command from client.*/
+
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -18,6 +24,8 @@ void *task1(void *);
 
 static int connFd;
 
+/*essentially creates a TCP socket and is binded to the specified port number, takes in connections, 
+and does tasks by threading*/
 int main(int argc, char* argv[])
 {
     int pId, portNo, listenFd;
@@ -101,16 +109,18 @@ int main(int argc, char* argv[])
     
 }
 
+//handles communication with client and responds to requests from client
 void *task1 (void *dummyPt)
 {
     cout << "Thread No: " << pthread_self() << endl; //prints thread ID
     char test[300]; //buffer to store messages from client
-    bzero(test, 300);
+    bzero(test, 300); //clears buffer
     bool loop = false;
+
     //loop that continues until client sends 'exit'
     while(!loop)
     {    
-        bzero(test, 300);
+        bzero(test, 300); //clears buffer 
         read(connFd, test, 300); //reads message from client
         
         string tester(test); //converts message to a string
@@ -118,32 +128,38 @@ void *task1 (void *dummyPt)
         
         //if client sent 'exit', break the loop
         if(tester == "exit") {
-            cout << "\nClosing thread and conn" << endl;
             break;
         }
+
+        //if client sent 'dir', send all files in current directory
         else if (tester == "dir") {
             DIR * dir; //pointer to a directory stream
             struct dirent *dp;
 
-            dir = opendir(".");
+            dir = opendir("."); //uses opendir function to open directory
 
-            if (dir == NULL) {
-
-            }
-
-
+            //this while loop helps to get each entry in the directory
             while ((dp = readdir(dir)) != NULL) {
                 string all_files(dp -> d_name);
                 all_files += "\n";
-                write(connFd, all_files.c_str(), all_files.size());
+                if (write(connFd, all_files.c_str(), all_files.size()) < 0) {
+                    cerr << "Error writing to socket" << endl;
+                }
+                else {
+                    cout << endl;
+                }
             }
-
-            closedir(dir);
-            string end_of_dir = "End_of_Dir\n";
-            write(connFd, end_of_dir.c_str(), end_of_dir.size());
+            closedir(dir); //uses closedir to close directory
+            string end_of_dir = "End of Directory!\n"; //string that signals end of the directory
+            if (write(connFd, end_of_dir.c_str(), end_of_dir.size()) < 0) {
+                cerr << "Error writing to socket" << endl;
+            }
+            else {
+                cout << endl; 
+            }
         }
         else {
-            //checks if the file requested by the client exists
+            //checks if the file requested by the client exists, if not transfer file to server
             ifstream file(tester);
             if (file.good()) {
                 //if file exists, send message to client
@@ -151,17 +167,6 @@ void *task1 (void *dummyPt)
                 write(connFd, res, strlen(res));
             }
             else {
-                /*//if file doesn't exist, send message to client
-                char res[] = "The file doesn't exist! Transferring file to server...";
-                write (connFd, res, strlen(res));
-
-                //creates file name with name from client
-                //ofstream outfile(tester);
-                while (read(connFd, test, 300) > 0) {
-                    outfile << test;
-                    bzero(test, 300);
-                }
-                //outfile.close();*/
                 char res[] = "The file doesn't exist! Transferring file to server...";
                 write(connFd, res, strlen(res)); 
             }

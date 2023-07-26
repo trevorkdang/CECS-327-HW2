@@ -1,3 +1,7 @@
+//Trevor Dang Student ID: 029014893
+/* This client program connects to a server with provided IP address and port number 
+in order to request a specific file from the server, request the files of the current 
+working directory, or exit the connection between the client and server*/
 
 #include <string.h>
 #include <cstring>
@@ -19,6 +23,8 @@
 
 using namespace std;
 
+/*essentailly connects to the server with an IP address and port number, sends specific requests, 
+sends file contents if file doesn't exists, and exits connection*/
 int main (int argc, char* argv[])
 {
     int listenFd, portNo;
@@ -86,29 +92,28 @@ int main (int argc, char* argv[])
 
         //if 'exit' is typed in command line, end connection
         if (strcmp(s, "exit") == 0){
+            cout << "Closing thread and connection..." << endl;
             break;
         }
         
-        //sends t he file name to the server
+        //sends the file name to the server
         write(listenFd, s, strlen(s));
 
+        //if 'dir' is typed in command line, goes and gets the directory from server
         if (strcmp(s, "dir") == 0) {
-            //string rec;
             while (true) {
-                char res[300];
-                bzero(res, 300);
+                char res[300]; //buffer
+                bzero(res, 300); //buffer reset
                 read(listenFd, res, 300);
-                //rec = res;
-                //if (res != "End_of_Dir") {
-                if (strcmp(res, "End_of_Dir") == 0) {
+                //if server sends 'End of Directory\n' break the loop, else print server response
+                if (strcmp(res, "End of Directory!\n") == 0) {
                     break;
                 }
                 else {
                     cout << res << endl;
                 }
-            } 
-            //while (rec != "End_of_Dir");
-            continue;
+            }
+            continue; //skips rest of the iteration and goes to the next one
         }
         else {
             //stores and waits for server response
